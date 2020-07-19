@@ -1,4 +1,4 @@
-// todo: add bypass mode?
+
 
 #include <MIDI.h>
 
@@ -9,7 +9,10 @@
 #define BUTTON2  3
 #define BUTTON3  4
 
-const int CHANNEL      = 1;
+MIDI_CREATE_DEFAULT_INSTANCE();
+
+
+const int CHANNEL      = 12;
 const int UP           = 0;
 const int DOWN         = 1;
 const int BOUNCE       = 2;
@@ -70,11 +73,12 @@ void setup() {
   // Initiate MIDI communications, listen to all channels
   MIDI.begin(MIDI_CHANNEL_OMNI);    
 
-  MIDI.setHandleNoteOn(HandleNoteOn); 
+  MIDI.setHandleNoteOn(HandleNoteOn);
+  MIDI.setHandleNoteOff(HandleNoteOff);
   MIDI.setHandleControlChange (HandleControlChange);
-  MIDI.setHandleClock (HandleClock);
-  MIDI.setHandleStart (HandleStart);
-  MIDI.setHandleStop (HandleStop);
+  MIDI.setHandleClock(HandleClock);
+  MIDI.setHandleStart(HandleStart);
+  MIDI.setHandleStop(HandleStop);
   MIDI.turnThruOff();
 
   digitalWrite(STAT1,HIGH);
@@ -82,7 +86,14 @@ void setup() {
 
 }
 
+void HandleNoteOff(byte channel, byte pitch, byte velocity) { 
+  //https://forum.arduino.cc/index.php?topic=198426.0
+  //all note off
 
+  MIDI.sendControlChange(123,0,CHANNEL);
+  resetNotes();
+
+}
 // This function will be automatically called when a NoteOn is received.
 // see documentation here: 
 // http://arduinomidilib.sourceforge.net/
@@ -233,7 +244,7 @@ void handleTick(unsigned long tick) {
 
 
       // stop the previous note
-      // MIDI.sendNoteOff(notes[playBeat],0,CHANNEL);
+      MIDI.sendNoteOff(notes[playBeat],0,CHANNEL);
 
       // fixes a bug where a random note would sometimes get played when switching chords
       if (notes[playBeat] == '\0')
